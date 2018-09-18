@@ -38,6 +38,7 @@ parser.add_argument('file_name',
                     help='cycle collector graph file name')
 
 parser.add_argument('target',
+                    nargs='?',
                     help='address of target object or prefix of class name of targets')
 
 parser.add_argument('--simple-path', '-sp', dest='simple_path', action='store_true',
@@ -160,6 +161,8 @@ def explainRoot(args, knownEdgesFn, ga, num_known, roots, root):
 
 # print out the path to an object that has been discovered
 def printPathBasic(args, knownEdgesFn, ga, num_known, roots, path):
+  print 'printPathBasic: root node address: %s' % path[0]
+  print 'printPathBasic: label: %s' % ga.nodeLabels.get(path[0], '')
   print_node(ga, path[0])
   sys.stdout.write('\n')
   prev = path[0]
@@ -176,6 +179,9 @@ def printPathBasic(args, knownEdgesFn, ga, num_known, roots, path):
 
   explainRoot(args, knownEdgesFn, ga, num_known, roots, path[0])
   print
+
+  # return possible the root of orphan node address
+  return path[0]
 
 def print_simple_node (ga, x):
   sys.stdout.write ('[{0}]'.format(ga.nodeLabels.get(x, '')))
@@ -203,12 +209,14 @@ def print_roots_only_path(f, path):
 def printPath(args, knownEdgesFn, ga, num_known, roots, path):
   if args.print_roots_only:
     print_roots_only_path(args.output_file, path)
+    return
   elif args.simple_path:
     if args.print_reverse:
       path.reverse()
     print_simple_path(args, ga, path)
+    return
   else:
-    printPathBasic(args, knownEdgesFn, ga, num_known, roots, path)
+    return printPathBasic(args, knownEdgesFn, ga, num_known, roots, path)
 
 
 ########################################################
@@ -334,7 +342,7 @@ def findRootsBFS(args, g, ga, num_known, roots, target):
 
       print
 
-      printPath(args, knownEdgesFn, ga, num_known, roots, path)
+      possibleOrphanRoot = printPath(args, knownEdgesFn, ga, num_known, roots, path)
     else:
       print 'Didn\'t find a path.'
       print
@@ -342,7 +350,7 @@ def findRootsBFS(args, g, ga, num_known, roots, target):
 
   del g[startObject]
 
-  return
+  return possibleOrphanRoot
 
 
 ########################################################
@@ -528,6 +536,33 @@ def findCCRoots():
       else:
         print
         findRootsBFS(args, g, ga, res[0], roots, a)
+    else:
+      sys.stderr.write('{0} is not in the graph.\n'.format(a))
+
+  if args.output_to_file:
+    args.output_file.close()
+
+def findOrphanCCRoots(address):
+  args = parser.parse_args()
+
+  (g, ga, res) = loadGraph (args.file_name)
+
+  roots = selectRoots(args, g, ga, res)
+  # we provide address instead of args.target
+  targs = selectTargets(g, ga, address)
+
+  if args.output_to_file:
+    args.output_file = open(args.file_name + '.out', 'w')
+  else:
+    args.output_file = sys.stdout
+
+  for a in targs:
+    if a in g:
+      if args.use_dfs:
+        findRootsDFS(args, g, ga, res[0], roots, a)
+      else:
+        print
+        return findRootsBFS(args, g, ga, res[0], roots, a)
     else:
       sys.stderr.write('{0} is not in the graph.\n'.format(a))
 

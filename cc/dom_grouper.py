@@ -19,10 +19,10 @@ argparser = argparse.ArgumentParser(description='Group together DOM nodes into t
 argparser.add_argument('file_name',
                        help='Cycle collector edge file name.')
 argparser.add_argument('--only-orphans', '-oo', dest='only_orphans', action='store_true',
-                       default=False,
+                       default=True,
                        help='Only print out information about orphan nodes')
 argparser.add_argument('--no-garbage', '-ng', dest='no_garbage', action='store_true',
-                       default=False,
+                       default=True,
                        help='Don\'t print out information about garbage')
 
 
@@ -65,6 +65,7 @@ def print_grouper_results (counts, rootLabels, docParents, docURLs, garb):
   garbage_total = 0
   in_doc_total = 0
   orphan_total = 0
+  possibleOrphan = set([])
 
   fout = open('counts.log', 'w')
   sys.stderr.write('Printing grouping results to counts.log\n')
@@ -77,6 +78,11 @@ def print_grouper_results (counts, rootLabels, docParents, docURLs, garb):
 
     if print_this:
       fout.write('%(num)8d %(label)s' % {'num':n, 'label':x})
+      if x not in docParents:
+        # this is orphan node address
+        print ' Orphan node address: %(label)s has child total count : %(num)s' % {'label': x, 'num':n}
+        print
+        possibleOrphan.add(x) 
     if x in garb:
       garbage_total += n
       if print_this:
@@ -86,6 +92,7 @@ def print_grouper_results (counts, rootLabels, docParents, docURLs, garb):
       if print_this:
         fout.write(' in document %(addr)s %(label)s\n' \
                    % {'addr':docParents[x], 'label':docURLs[docParents[x]]})
+        print 'in document label: %(label)s' % {'label': x}
     else:
       orphan_total += n
       if print_this:
@@ -95,6 +102,7 @@ def print_grouper_results (counts, rootLabels, docParents, docURLs, garb):
   sys.stderr.write('Found %(num)d nodes in DOMs in documents.\n' % {'num':in_doc_total})
   sys.stderr.write('Found %(num)d garbage nodes in DOMs.\n' % {'num':garbage_total})
   fout.close()
+  return possibleOrphan
 
 
 def getURL(s):
@@ -205,7 +213,7 @@ def parseGraph (f):
       rootLabels[y] = currLabel
 
   # print out results
-  print_grouper_results(counts, rootLabels, docParents, docURLs, garb)
+  orphans = print_grouper_results(counts, rootLabels, docParents, docURLs, garb)
 
   # print out merging information
   if printMergingInformation:
@@ -215,7 +223,7 @@ def parseGraph (f):
         print y,
       print
 
-  return trees
+  return trees, orphans
 
 
 def mergeDOMParents (f, trees):
@@ -326,13 +334,14 @@ def parseFile (fname):
     sys.stderr.write('Error opening file' + fname + '\n')
     exit(-1)
 
-  trees = parseGraph(f)
+  trees, orphan_addr = parseGraph(f)
   f.close()
 
   if printMergingInformation:
     f = open(fname, 'r')
     mergeDOMParents(f, trees)
     f.close()
+  return orphan_addr
 
 
 parseFile(sys.argv[1])

@@ -32,6 +32,7 @@ parser.add_argument('file_name',
                     help='cycle collector graph file name')
 
 parser.add_argument('target',
+                    nargs='?',
                     help='address of target object or prefix of class name of targets')
 
 parser.add_argument('--simple-path', '-sp', dest='simple_path', action='store_true',
@@ -46,7 +47,7 @@ parser.add_argument('--num-paths', '-np', type=int, dest='max_num_paths',
                     help='Only print out the first so many paths for each target.')
 
 parser.add_argument('--black-roots-only', '-bro', dest='black_roots_only', action='store_true',
-                    default=False,
+                    default=True,
                     help='If this is set, only trace from black roots.  Otherwise, also trace from gray roots.')
 
 parser.add_argument('--string-mode', '-sm', dest='string_mode', action='store_true',
@@ -121,6 +122,8 @@ def explain_root(ga, root):
 
 # print out the path to an object that has been discovered
 def basic_print_path(args, ga, path):
+  print 'basic_print_path: root node address: %s' % path[0]
+  print 'bsaic_print_path: label: %s' % ga.nodeLabels[path[0]][:50]
   explain_root(ga, path[0])
   print_node(ga, path[0])
   sys.stdout.write('\n')
@@ -136,7 +139,7 @@ def basic_print_path(args, ga, path):
 
   print
   print
-
+  return path[0]
 
 def print_simple_node(ga, x):
   l = ga.nodeLabels[x][:50]
@@ -181,10 +184,12 @@ def print_simple_path(args, ga, path):
 def print_path(args, ga, path):
   if args.simple_path:
     print_simple_path(args, ga, path)
+    return
   elif args.dot_mode:
     add_dot_mode_path(ga, path)
+    return
   else:
-    basic_print_path(args, ga, path)
+    return basic_print_path(args, ga, path)
 
 
 ########################################################
@@ -195,6 +200,7 @@ def findRootsBFS(args, g, ga, target):
   workList = deque()
   distances = {}
   limit = -1
+  targetAddr = ''
 
   def traverseWeakMapEntry(dist, k, m, v, lbl):
     if not k in distances or not m in distances:
@@ -302,10 +308,10 @@ def findRootsBFS(args, g, ga, target):
       assert(path[-1] == startObject)
       path.pop()
       path.reverse()
-      print_path(args, ga, path)
+      targetAddr = print_path(args, ga, path)
     else:
       print 'Didn\'t find a path.'
-  return
+  return targetAddr
 
 
 
@@ -440,6 +446,29 @@ def findGCRoots():
         print
         print
         findRootsBFS(args, g, ga, a)
+    else:
+      sys.stdout.write('{0} is not in the graph.\n'.format(a))
+
+  if args.dot_mode:
+    outputDotFile(args, ga, targs)
+
+def findGCRootsWithBlackOnly(targetAddr):
+  args = parser.parse_args()
+  args.black_roots_only = True
+  gc_filename = args.file_name.replace('cc', 'gc')
+  print gc_filename
+  (g, ga) = loadGraph(gc_filename)
+  args.target = targetAddr
+  targs = selectTargets(args, g, ga)
+
+  for a in targs:
+    if a in g:
+      if args.use_dfs:
+        findRootsDFS(args, g, ga, a)
+      else:
+        print
+        print
+        return findRootsBFS(args, g, ga, a)
     else:
       sys.stdout.write('{0} is not in the graph.\n'.format(a))
 
