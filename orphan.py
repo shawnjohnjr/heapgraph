@@ -27,13 +27,15 @@ if baseFileName.startswith('cc'):
     orphans = cc.dom_grouper.parseFile(sys.argv[1])
     for x in orphans:
       print '######################## Begin #####################################'
-      print '--------------- Orphan node: %s ----------------------------' % x
-      print 'orphan nodes:  %(label)s ' % {'label': x}
+      # print '--------------- Orphan node: %s ----------------------------' % x
+      #print 'orphan nodes:  %(label)s ' % {'label': x}
       addr = cc.find_roots.findOrphanCCRoots(x)
       print 'getting cc root address %s' % addr
-      gAddr = g.find_roots.findGCRootsWithBlackOnly(addr)
+      if addr:
+        gAddr = g.find_roots.findGCRootsWithBlackOnly(addr)
       print 'getting who holds that cc'
-      cc.find_roots.findOrphanCCRoots(gAddr)
+      if gAddr:
+        cc.find_roots.findOrphanCCRoots(gAddr)
       print '######################## End #####################################'
       print
       print

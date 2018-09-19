@@ -37,7 +37,7 @@ def parseZones(f):
         nm = rootPatt.match(l)
         if not nm:
             if l == "==========\n":
-                break;
+                break
             else:
                 print "Error: unknown line ", l
                 f.close()
@@ -134,7 +134,7 @@ def analyzeArena(a, out):
     #out.append([100 * unusedSpace / arenaSize, 100 * arenaSlop / arenaSize, 100 * usedSize / arenaSize])
 
 def doStuff():
-    zones = parseArenaFile('gc-edges.310.log')
+    zones = parseArenaFile('gc-edges.13651.1535757252.log')
 
     print 'Number of arenas in each zone with a given percentage of unused space, crudely bucketed.'
 

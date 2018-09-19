@@ -80,8 +80,8 @@ def print_grouper_results (counts, rootLabels, docParents, docURLs, garb):
       fout.write('%(num)8d %(label)s' % {'num':n, 'label':x})
       if x not in docParents:
         # this is orphan node address
-        print ' Orphan node address: %(label)s has child total count : %(num)s' % {'label': x, 'num':n}
-        print
+        #print ' Orphan node address: %(label)s has child total count : %(num)s' % {'label': x, 'num':n}
+        #print
         possibleOrphan.add(x) 
     if x in garb:
       garbage_total += n
@@ -343,5 +343,5 @@ def parseFile (fname):
     f.close()
   return orphan_addr
 
-
-parseFile(sys.argv[1])
+if __name__ == "__main__":
+  parseFile(sys.argv[1])
