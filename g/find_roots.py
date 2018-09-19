@@ -139,7 +139,7 @@ def basic_print_path(args, ga, path):
 
   print
   print
-  return path[0]
+  return path[0], ga.rootLabels[path[0]]
 
 def print_simple_node(ga, x):
   l = ga.nodeLabels[x][:50]
@@ -308,10 +308,10 @@ def findRootsBFS(args, g, ga, target):
       assert(path[-1] == startObject)
       path.pop()
       path.reverse()
-      targetAddr = print_path(args, ga, path)
+      targetAddr, explainRoot = print_path(args, ga, path)
     else:
       print 'Didn\'t find a path.'
-  return targetAddr
+  return targetAddr, explainRoot
 
 
 
