@@ -12,7 +12,9 @@ import g.find_roots
 import os
 
 def parseFile (fname, matchstr):
-    listenerString = ''
+    listenerSet = set([])
+    callbackObjects = set([])
+
     try:
         f = open(fname, 'r')
     except:
@@ -21,27 +23,34 @@ def parseFile (fname, matchstr):
 
     prev = next(f)
 
+    # Find all CallbackObject, it could be multiple CallbackObject points to the same mCallback.
     for l in f:
         if l == matchstr:
-            listenerString = prev
-            break
+            callbackObjects.add(prev)
         prev = l
 
     # expect string like '0xa9e8b440 [rc=1] CallbackObject', try to find edge pattern '> 0xa9e8b440 mListeners event=onanimationend listenerType=3 [i]'
-    if listenerString != '':
-        listenerAddr = ''
-        nodePatt = re.compile ('([a-zA-Z0-9]+) \[(?:rc=[0-9]+|gc(?:.marked)?)\] (.*)$')
-        nm = nodePatt.match(listenerString)
-        if nm:
-            listenerAddr = nm.group(1)
-            listenerPatt = re.compile('^> %s mListeners (.*)$'%listenerAddr)
-            for l in f:
-                m = listenerPatt.match(l)
-                if m:
-                    listenerString = m.group(1)
+    if callbackObjects:
+        # print 'There are ' + str(len(callbackObjects)) + ' CallbackObject.'
+        for listenerString in callbackObjects:
+            listenerAddr = ''
+            nodePatt = re.compile ('([a-zA-Z0-9]+) \[(?:rc=[0-9]+|gc(?:.marked)?)\] (.*)$')
+            nm = nodePatt.match(listenerString)
+            if nm:
+                # print 'found matched listener'
+                listenerAddr = nm.group(1)
+                listenerPatt = re.compile('^> %s mListeners (.*)$'%listenerAddr)
+                # reset file pointer and iter again.
+                f.seek(0)
+                for l in f:
+                    nmiter = listenerPatt.finditer(l)
+                    if nmiter:
+                        for m in nmiter:
+                            # print 'found ' + m.group(1)
+                            listenerSet.add(m.group(1))
 
     f.close()
-    return listenerString
+    return listenerSet
 
 if len(sys.argv) < 2:
     sys.stderr.write('Expected at least one argument, the edge file name.\n')
@@ -72,15 +81,19 @@ if baseFileName.startswith('cc'):
                 print("Unexpected error:", sys.exc_info()[0])
                 continue
 
-        print 'getting who holds that cc'
+        #print 'getting who holds that cc'
         print 'Explaining root : %s  ' % explainRoot
 
         if explainRoot == 'mCallback':
-            print 'Suspecting listener is: \n'
+            # Find pattern like "> 0xaf048f70 mCallback", this leads us to find which event listener (usually named CallbackObject) is using mCallback.
+            listeners = parseFile(sys.argv[1], '> %s mCallback\n'%gAddr)
+            print 'There are ' + str(len(listeners)) + ' suspecting listener are: \n'
             print '---------------------------------------------'
-            print ('\x1b[6;30;42m  ' + parseFile(sys.argv[1], '> %s mCallback\n'%gAddr) + '\x1b[0m')
+
+            for listenerString in listeners:
+                print ('\x1b[6;30;42m  ' + listenerString + '\x1b[0m')
             print '---------------------------------------------\n'
-            print 'Please check this event listener has been correctly removed\n'
+            print 'Please check these event listener(s) has been correctly removed.\n'
         if gAddr:
             cc.find_roots.findOrphanCCRoots(gAddr)
         print '######################## End #####################################'

@@ -122,8 +122,8 @@ def explain_root(ga, root):
 
 # print out the path to an object that has been discovered
 def basic_print_path(args, ga, path):
-  print 'basic_print_path: root node address: %s' % path[0]
-  print 'bsaic_print_path: label: %s' % ga.nodeLabels[path[0]][:50]
+  #print 'basic_print_path: root node address: %s' % path[0]
+  #print 'bsaic_print_path: label: %s' % ga.nodeLabels[path[0]][:50]
   explain_root(ga, path[0])
   print_node(ga, path[0])
   sys.stdout.write('\n')
