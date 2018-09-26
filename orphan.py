@@ -63,9 +63,15 @@ if baseFileName.startswith('cc'):
         # print '--------------- Orphan node: %s ----------------------------' % x
         #print 'orphan nodes:  %(label)s ' % {'label': x}
         addr = cc.find_roots.findOrphanCCRoots(x)
+
         print 'getting cc root address %s' % addr
         if addr:
-            gAddr, explainRoot = g.find_roots.findGCRootsWithBlackOnly(addr)
+            try:
+                gAddr, explainRoot = g.find_roots.findGCRootsWithBlackOnly(addr)
+            except:
+                print("Unexpected error:", sys.exc_info()[0])
+                continue
+
         print 'getting who holds that cc'
         print 'Explaining root : %s  ' % explainRoot
 
