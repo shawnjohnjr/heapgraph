@@ -98,9 +98,9 @@ def print_grouper_results (counts, rootLabels, docParents, docURLs, garb):
       if print_this:
         fout.write(' orphan from ' + rootLabels[x] + '\n')
 
-  sys.stderr.write('Found %(num)d nodes in orphan DOMs.\n' % {'num':orphan_total})
-  sys.stderr.write('Found %(num)d nodes in DOMs in documents.\n' % {'num':in_doc_total})
-  sys.stderr.write('Found %(num)d garbage nodes in DOMs.\n' % {'num':garbage_total})
+  print('Found %(num)d nodes in orphan DOMs.\n' % {'num':orphan_total})
+  print('Found %(num)d nodes in DOMs in documents.\n' % {'num':in_doc_total})
+  print('Found %(num)d garbage nodes in DOMs.\n' % {'num':garbage_total})
   fout.close()
   return possibleOrphan
 

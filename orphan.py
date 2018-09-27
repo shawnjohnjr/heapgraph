@@ -66,6 +66,7 @@ baseFileName = os.path.basename(sys.argv[1])
 
 if baseFileName.startswith('cc'):
     print '######################## Prepare to parse cc/gc log #####################################'
+    print "Under this folder: " + os.getcwd() + "\n"
     orphans = cc.dom_grouper.parseFile(sys.argv[1])
     for x in orphans:
         print '######################## Begin #####################################'
