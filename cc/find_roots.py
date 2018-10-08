@@ -347,6 +347,7 @@ def findRootsBFS(args, g, ga, num_known, roots, target):
       print 'Didn\'t find a path.'
       print
       printKnownEdges(args, knownEdgesFn(p), ga, p)
+      possibleOrphanRoot = []
 
   del g[startObject]
 
