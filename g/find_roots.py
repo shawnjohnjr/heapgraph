@@ -311,6 +311,7 @@ def findRootsBFS(args, g, ga, target):
       targetAddr, explainRoot = print_path(args, ga, path)
     else:
       print 'Didn\'t find a path.'
+      explainRoot = ''
   return targetAddr, explainRoot
 
 
